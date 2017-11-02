@@ -112,17 +112,18 @@ void test_simple_file_test() {
     TEST_ASSERT_EQUAL(0, res);
 }
 
-void test_small_file_test() {
+template <int file_size, int write_size, int read_size, const char * filename>
+void test_write_file_test() {
     int res = bd.init();
     TEST_ASSERT_EQUAL(0, res);
 
     {
-        size_t size = 32;
-        size_t chunk = 31;
+        size_t size = file_size;
+        size_t chunk = write_size;
         srand(0);
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, "smallavacado", O_WRONLY | O_CREAT);
+        res = file[0].open(&fs, filename, O_WRONLY | O_CREAT);
         TEST_ASSERT_EQUAL(0, res);
         for (size_t i = 0; i < size; i += chunk) {
             chunk = (chunk < size - i) ? chunk : size - i;
@@ -139,118 +140,12 @@ void test_small_file_test() {
     }
 
     {
-        size_t size = 32;
-        size_t chunk = 29;
+        size_t size = file_size;
+        size_t chunk = read_size;
         srand(0);
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, "smallavacado", O_RDONLY);
-        TEST_ASSERT_EQUAL(0, res);
-        for (size_t i = 0; i < size; i += chunk) {
-            chunk = (chunk < size - i) ? chunk : size - i;
-            res = file[0].read(buffer, chunk);
-            TEST_ASSERT_EQUAL(chunk, res);
-            for (size_t b = 0; b < chunk && i+b < size; b++) {
-                res = buffer[b];
-                TEST_ASSERT_EQUAL(rand() & 0xff, res);
-            }
-        }
-        res = file[0].close();
-        TEST_ASSERT_EQUAL(0, res);
-        res = fs.unmount();
-        TEST_ASSERT_EQUAL(0, res);
-    }
-
-    res = bd.deinit();
-    TEST_ASSERT_EQUAL(0, res);
-}
-
-void test_medium_file_test() {
-    int res = bd.init();
-    TEST_ASSERT_EQUAL(0, res);
-
-    {
-        size_t size = 8192;
-        size_t chunk = 31;
-        srand(0);
-        res = fs.mount(&bd);
-        TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, "mediumavacado", O_WRONLY | O_CREAT);
-        TEST_ASSERT_EQUAL(0, res);
-        for (size_t i = 0; i < size; i += chunk) {
-            chunk = (chunk < size - i) ? chunk : size - i;
-            for (size_t b = 0; b < chunk; b++) {
-                buffer[b] = rand() & 0xff;
-            }
-            res = file[0].write(buffer, chunk);
-            TEST_ASSERT_EQUAL(chunk, res);
-        }
-        res = file[0].close();
-        TEST_ASSERT_EQUAL(0, res);
-        res = fs.unmount();
-        TEST_ASSERT_EQUAL(0, res);
-    }
-
-    {
-        size_t size = 8192;
-        size_t chunk = 29;
-        srand(0);
-        res = fs.mount(&bd);
-        TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, "mediumavacado", O_RDONLY);
-        TEST_ASSERT_EQUAL(0, res);
-        for (size_t i = 0; i < size; i += chunk) {
-            chunk = (chunk < size - i) ? chunk : size - i;
-            res = file[0].read(buffer, chunk);
-            TEST_ASSERT_EQUAL(chunk, res);
-            for (size_t b = 0; b < chunk && i+b < size; b++) {
-                res = buffer[b];
-                TEST_ASSERT_EQUAL(rand() & 0xff, res);
-            }
-        }
-        res = file[0].close();
-        TEST_ASSERT_EQUAL(0, res);
-        res = fs.unmount();
-        TEST_ASSERT_EQUAL(0, res);
-    }
-
-    res = bd.deinit();
-    TEST_ASSERT_EQUAL(0, res);
-}
-
-void test_large_file_test() {
-    int res = bd.init();
-    TEST_ASSERT_EQUAL(0, res);
-
-    {
-        size_t size = 262144;
-        size_t chunk = 31;
-        srand(0);
-        res = fs.mount(&bd);
-        TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, "largeavacado", O_WRONLY | O_CREAT);
-        TEST_ASSERT_EQUAL(0, res);
-        for (size_t i = 0; i < size; i += chunk) {
-            chunk = (chunk < size - i) ? chunk : size - i;
-            for (size_t b = 0; b < chunk; b++) {
-                buffer[b] = rand() & 0xff;
-            }
-            res = file[0].write(buffer, chunk);
-            TEST_ASSERT_EQUAL(chunk, res);
-        }
-        res = file[0].close();
-        TEST_ASSERT_EQUAL(0, res);
-        res = fs.unmount();
-        TEST_ASSERT_EQUAL(0, res);
-    }
-
-    {
-        size_t size = 262144;
-        size_t chunk = 29;
-        srand(0);
-        res = fs.mount(&bd);
-        TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, "largeavacado", O_RDONLY);
+        res = file[0].open(&fs, filename, O_RDONLY);
         TEST_ASSERT_EQUAL(0, res);
         for (size_t i = 0; i < size; i += chunk) {
             chunk = (chunk < size - i) ? chunk : size - i;
@@ -349,6 +244,9 @@ void test_non_overlap_check() {
 }
 
 void test_dir_check() {
+
+    char *filenames[] = {"blockfile", "bigblockfile", "hello", "smallavacado",
+                         "mediumavacado", "largeavacado", ".", ".."};
     int res = bd.init();
     TEST_ASSERT_EQUAL(0, res);
 
@@ -357,40 +255,31 @@ void test_dir_check() {
         TEST_ASSERT_EQUAL(0, res);
         res = dir[0].open(&fs, "/");
         TEST_ASSERT_EQUAL(0, res);
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "hello");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ent.d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-    
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "smallavacado");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ent.d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-    
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "mediumavacado");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ent.d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-    
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "largeavacado");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ent.d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-    
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(0, res);
+        int numFiles = sizeof(filenames)/sizeof(filenames[0]);
+        // Check the filenames in directory
+        while(1) {
+            res = dir[0].read(&ent);
+            if (0 == res) {
+                break;
+            }
+            for (int i=0; i < numFiles ; i++) {
+                res = strcmp(ent.d_name, filenames[i]);
+                if (0 == res) {
+                    res = ent.d_type;
+                    // Check if files (intial) in filenames declaration are
+                    // regular files or not.
+                    if ( i < (numFiles-3)) {
+                        TEST_ASSERT_EQUAL(DT_REG, res);
+                    }else {
+                        TEST_ASSERT_EQUAL(DT_DIR, res);
+                    }
+                    break;
+                }
+                else if( i == numFiles) {
+                    TEST_ASSERT_EQUAL(0, res);
+                }
+            }
+        }
         res = dir[0].close();
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -402,7 +291,6 @@ void test_dir_check() {
 }
 
 
-
 // test setup
 utest::v1::status_t test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(MBED_TEST_TIMEOUT, "default_auto");
@@ -412,9 +300,11 @@ utest::v1::status_t test_setup(const size_t number_of_cases) {
 Case cases[] = {
     Case("File tests", test_file_tests),
     Case("Simple file test", test_simple_file_test),
-    Case("Small file test", test_small_file_test),
-    Case("Medium file test", test_medium_file_test),
-    Case("Large file test", test_large_file_test),
+    Case("Small file test", test_write_file_test<32, 31, 29, "smallavacado">),
+    Case("Medium file test", test_write_file_test<8192, 31, 29, "mediumavacado">),
+    Case("Large file test", test_write_file_test<262144, 31, 29, "largeavacado">),
+    Case("Block size file test", test_write_file_test<9000, 512, 512, "blockfile">),
+    Case("Multiple block size file test", test_write_file_test<26215, MBED_TEST_BUFFER, MBED_TEST_BUFFER, "bigblockfile">),
     Case("Non-overlap check", test_non_overlap_check),
     Case("Dir check", test_dir_check),
 };
