@@ -135,46 +135,45 @@ void test_file_creation() {
     TEST_ASSERT_EQUAL(0, res);
 }
 
+void dir_file_check(char *list[], uint32_t elements) {
+    int res;
+    while(1) {
+        ed = readdir(dd[0]));
+        if (NULL == ed) {
+            break;
+        }
+        for (int i = 0; i < elements ; i++) {
+            res = strcmp(ed->d_name, list[i]);
+            if (0 == res) {
+                res = ed->d_type;
+                if ((DT_DIR != res) && (DT_REG != res)) {
+                    TEST_ASSERT(1);
+                }
+                break;
+            }
+            else if( i == elements) {
+                TEST_ASSERT_EQUAL(0, res);
+            }
+        }
+    }
+}
+
 void test_directory_iteration() {
     int res = bd.init();
     TEST_ASSERT_EQUAL(0, res);
 
-    {
-        res = fs.mount(&bd);
-        TEST_ASSERT_EQUAL(0, res);
-        res = !((dd[0] = opendir("/fs/" "/")) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "potato");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "burito");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
-        res = closedir(dd[0]);
-        TEST_ASSERT_EQUAL(0, res);
-        res = fs.unmount();
-        TEST_ASSERT_EQUAL(0, res);
-    }
+    res = fs.mount(&bd);
+    TEST_ASSERT_EQUAL(0, res);
+    res = !((dd[0] = opendir("/fs/" "/")) != NULL);
+    TEST_ASSERT_EQUAL(0, res);
+    char *dir_list[] = {"potato", "burito", ".", ".."};
+
+    dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
+
+    res = closedir(dd[0]);
+    TEST_ASSERT_EQUAL(0, res);
+    res = fs.unmount();
+    TEST_ASSERT_EQUAL(0, res);
 
     res = bd.deinit();
     TEST_ASSERT_EQUAL(0, res);
@@ -227,38 +226,8 @@ void test_nested_directories() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "potato")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "baked");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+        char *dir_list[] = {"potato", "baked", "sweet", "fried", ".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -292,18 +261,12 @@ void test_multi_block_directory() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "cactus")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
+
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
+        char *dir_list[] = {".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
+#endif
+
         for (int i = 0; i < 128; i++) {
             sprintf((char*)buffer, "test%d", i);
             res = ((ed = readdir(dd[0])) != NULL);
@@ -340,52 +303,21 @@ void test_directory_remove() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "potato")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
+        char *dir_list[] = {".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
+#endif
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
+        
         res = remove("/fs/" "potato");
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "/")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "burito");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "cactus");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+
+        char *dir_list[] = {"burito", "cactus", ".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -397,32 +329,8 @@ void test_directory_remove() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "/")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "burito");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_REG, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "cactus");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+        char *dir_list[] = {"burito", "cactus", ".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -466,38 +374,8 @@ void test_directory_rename() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "hotpotato")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "baked");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+        char *dir_list[] = {"baked", "sweet", "fried", ".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -515,6 +393,8 @@ void test_directory_rename() {
         TEST_ASSERT_EQUAL(EINVAL, errno);
         res = remove("/fs/" "warmpotato/mushy");
         TEST_ASSERT_EQUAL(0, res);
+        res = remove("/fs/" "warmpotato");
+        TEST_ASSERT_EQUAL(0, res);
         res = rename("/fs/" "hotpotato", "/fs/" "warmpotato");
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -526,38 +406,8 @@ void test_directory_rename() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "warmpotato")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "baked");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+        char *dir_list[] = {"baked", "sweet", "fried", ".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
@@ -588,38 +438,8 @@ void test_directory_rename() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "coldpotato")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, ".");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "..");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "baked");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(0, res);
+        char *dir_list[] = {"baked", "sweet", "fried", ".", ".."};
+        dir_file_check(dir_list, (sizeof(dir_list)/sizeof(dir_list[0])));
         res = closedir(dd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();

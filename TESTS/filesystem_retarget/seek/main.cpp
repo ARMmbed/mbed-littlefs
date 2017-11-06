@@ -109,6 +109,7 @@ void test_simple_dir_seek() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "hello")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, ".");
@@ -117,7 +118,8 @@ void test_simple_dir_seek() {
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, "..");
         TEST_ASSERT_EQUAL(0, res);
-    
+#endif
+
         off_t pos;
         int i;
         for (i = 0; i < 4; i++) {
@@ -140,6 +142,7 @@ void test_simple_dir_seek() {
     
         rewinddir(dd[0]);
         sprintf((char*)buffer, "kitty%d", 0);
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, ".");
@@ -148,6 +151,7 @@ void test_simple_dir_seek() {
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, "..");
         TEST_ASSERT_EQUAL(0, res);
+#endif
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, (char*)buffer);
@@ -178,6 +182,7 @@ void test_large_dir_seek() {
         TEST_ASSERT_EQUAL(0, res);
         res = !((dd[0] = opendir("/fs/" "hello")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, ".");
@@ -186,7 +191,8 @@ void test_large_dir_seek() {
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, "..");
         TEST_ASSERT_EQUAL(0, res);
-    
+#endif
+
         off_t pos;
         int i;
         for (i = 0; i < 128; i++) {
@@ -209,6 +215,7 @@ void test_large_dir_seek() {
     
         rewinddir(dd[0]);
         sprintf((char*)buffer, "kitty%d", 0);
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, ".");
@@ -217,6 +224,7 @@ void test_large_dir_seek() {
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, "..");
         TEST_ASSERT_EQUAL(0, res);
+#endif
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, (char*)buffer);
@@ -577,8 +585,11 @@ void test_out_of_bounds_seek() {
         TEST_ASSERT_EQUAL(0, res);
         res = fread(buffer, 1, size, fd[0]);
         TEST_ASSERT_EQUAL(size, res);
+#if (MBED_TEST_FILESYSTEM != FATFileSystem)
+        // FatFs does not guarantee empty expanded buffer
         res = memcmp(buffer, "\0\0\0\0\0\0\0\0\0\0\0", size);
         TEST_ASSERT_EQUAL(0, res);
+#endif
         res = fclose(fd[0]);
         TEST_ASSERT_EQUAL(0, res);
         res = fs.unmount();
