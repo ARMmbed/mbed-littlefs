@@ -64,6 +64,9 @@ uint8_t buffer[MBED_TEST_BUFFER];
 uint8_t rbuffer[MBED_TEST_BUFFER];
 uint8_t wbuffer[MBED_TEST_BUFFER];
 
+static char file_counter = 0;
+const char *filenames[] = {"smallavacado", "mediumavacado", "largeavacado",
+                          "blockfile", "bigblockfile", "hello", ".", ".."};
 
 // tests
 
@@ -112,7 +115,7 @@ void test_simple_file_test() {
     TEST_ASSERT_EQUAL(0, res);
 }
 
-template <int file_size, int write_size, int read_size, const char * filename>
+template <int file_size, int write_size, int read_size>
 void test_write_file_test() {
     int res = bd.init();
     TEST_ASSERT_EQUAL(0, res);
@@ -123,7 +126,7 @@ void test_write_file_test() {
         srand(0);
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, filename, O_WRONLY | O_CREAT);
+        res = file[0].open(&fs, filenames[file_counter], O_WRONLY | O_CREAT);
         TEST_ASSERT_EQUAL(0, res);
         for (size_t i = 0; i < size; i += chunk) {
             chunk = (chunk < size - i) ? chunk : size - i;
@@ -145,7 +148,7 @@ void test_write_file_test() {
         srand(0);
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = file[0].open(&fs, filename, O_RDONLY);
+        res = file[0].open(&fs, filenames[file_counter], O_RDONLY);
         TEST_ASSERT_EQUAL(0, res);
         for (size_t i = 0; i < size; i += chunk) {
             chunk = (chunk < size - i) ? chunk : size - i;
@@ -162,6 +165,7 @@ void test_write_file_test() {
         TEST_ASSERT_EQUAL(0, res);
     }
 
+    file_counter++;
     res = bd.deinit();
     TEST_ASSERT_EQUAL(0, res);
 }
@@ -245,8 +249,6 @@ void test_non_overlap_check() {
 
 void test_dir_check() {
 
-    char *filenames[] = {"blockfile", "bigblockfile", "hello", "smallavacado",
-                         "mediumavacado", "largeavacado", ".", ".."};
     int res = bd.init();
     TEST_ASSERT_EQUAL(0, res);
 
@@ -266,12 +268,8 @@ void test_dir_check() {
                 res = strcmp(ent.d_name, filenames[i]);
                 if (0 == res) {
                     res = ent.d_type;
-                    // Check if files (intial) in filenames declaration are
-                    // regular files or not.
-                    if ( i < (numFiles-3)) {
-                        TEST_ASSERT_EQUAL(DT_REG, res);
-                    }else {
-                        TEST_ASSERT_EQUAL(DT_DIR, res);
+                    if ((DT_REG != res) && (DT_DIR != res)) {
+                        TEST_ASSERT(1);
                     }
                     break;
                 }
@@ -300,11 +298,11 @@ utest::v1::status_t test_setup(const size_t number_of_cases) {
 Case cases[] = {
     Case("File tests", test_file_tests),
     Case("Simple file test", test_simple_file_test),
-    Case("Small file test", test_write_file_test<32, 31, 29, "smallavacado">),
-    Case("Medium file test", test_write_file_test<8192, 31, 29, "mediumavacado">),
-    Case("Large file test", test_write_file_test<262144, 31, 29, "largeavacado">),
-    Case("Block size file test", test_write_file_test<9000, 512, 512, "blockfile">),
-    Case("Multiple block size file test", test_write_file_test<26215, MBED_TEST_BUFFER, MBED_TEST_BUFFER, "bigblockfile">),
+    Case("Small file test", test_write_file_test<32, 31, 29>),
+    Case("Medium file test", test_write_file_test<8192, 31, 29>),
+    Case("Large file test", test_write_file_test<262144, 31, 29>),
+    Case("Block size file test", test_write_file_test<9000, 512, 512>),
+    Case("Multiple block size file test", test_write_file_test<26215, MBED_TEST_BUFFER, MBED_TEST_BUFFER>),
     Case("Non-overlap check", test_non_overlap_check),
     Case("Dir check", test_dir_check),
 };
