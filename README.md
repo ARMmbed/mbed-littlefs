@@ -1,3 +1,9 @@
+# Obsolete
+
+**This repository has been merged into Mbed OS:**
+
+* [LittleFileSystem](https://github.com/ARMmbed/mbed-os/tree/master/features/filesystem/littlefs)
+
 ## mbed wrapper for the little filesystem
 
 This is the mbed wrapper for [littlefs](https://github.com/geky/littlefs),
