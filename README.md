@@ -27,20 +27,20 @@ that cannot fit a full flash translation layer.
 ## Usage
 
 If you are already using a filesystem in Mbed, adopting the littlefs should
-just require a name change to use the [LittleFileSystem](LittleFileSystem.h)
+just require a name change to use the [LittleFileSystem2](LittleFileSystem2.h)
 class.
 
 Here is a simple example that updates a file named "boot_count" every time
 the application runs:
 ``` c++
-#include "LittleFileSystem.h"
+#include "LittleFileSystem2.h"
 #include "SPIFBlockDevice.h"
 
 // Physical block device, can be any device that supports the BlockDevice API
 SPIFBlockDevice bd(PTE2, PTE4, PTE1, PTE5);
 
 // Storage for the littlefs
-LittleFileSystem fs("fs");
+LittleFileSystem2 fs("fs");
 
 // Entry point
 int main() {
@@ -49,7 +49,7 @@ int main() {
     if (err) {
         // Reformat if we can't mount the filesystem,
         // this should only happen on the first boot
-        LittleFileSystem::format(&bd);
+        LittleFileSystem2::format(&bd);
         fs.mount(&bd);
     }
 

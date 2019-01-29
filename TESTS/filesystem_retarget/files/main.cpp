@@ -24,7 +24,7 @@ using namespace utest::v1;
 
 // test configuration
 #ifndef MBED_TEST_FILESYSTEM
-#define MBED_TEST_FILESYSTEM LittleFileSystem
+#define MBED_TEST_FILESYSTEM LittleFileSystem2
 #endif
 
 #ifndef MBED_TEST_FILESYSTEM_DECL

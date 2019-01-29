@@ -20,7 +20,7 @@
 
 #include "atomic_usage.h"
 #include "ObservingBlockDevice.h"
-#include "LittleFileSystem.h"
+#include "LittleFileSystem2.h"
 
 #include <string.h>
 

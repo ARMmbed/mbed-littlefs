@@ -29,8 +29,8 @@ script:
       # Self-host with littlefs-fuse for fuzz test
     - CFLAGS="-Wno-format" make -C littlefs-fuse
 
-    - littlefs-fuse/lfs --format /dev/loop0
-    - littlefs-fuse/lfs /dev/loop0 mount
+    - littlefs-fuse/lfs2 --format /dev/loop0
+    - littlefs-fuse/lfs2 /dev/loop0 mount
 
     - ls mount
     - mkdir mount/littlefs

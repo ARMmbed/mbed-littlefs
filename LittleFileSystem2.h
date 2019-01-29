@@ -17,24 +17,24 @@
 /** \addtogroup storage */
 /** @{*/
 
-#ifndef MBED_LFSFILESYSTEM_H
-#define MBED_LFSFILESYSTEM_H
+#ifndef MBED_LFS2FILESYSTEM_H
+#define MBED_LFS2FILESYSTEM_H
 
 #include "FileSystem.h"
 #include "BlockDevice.h"
 #include "PlatformMutex.h"
-#include "lfs.h"
+#include "lfs2.h"
 
 namespace mbed {
 
 /**
- * LittleFileSystem, a little file system
+ * LittleFileSystem2, a little file system
  *
  * Synchronization level: Thread safe
  */
-class LittleFileSystem : public mbed::FileSystem {
+class LittleFileSystem2 : public mbed::FileSystem {
 public:
-    /** Lifetime of the LittleFileSystem
+    /** Lifetime of the LittleFileSystem2
      *
      *  @param name     Name of the file system in the tree.
      *  @param bd       Block device to mount. Mounted immediately if not NULL.
@@ -57,15 +57,15 @@ public:
      *      allocation scans and results in a faster filesystem but uses
      *      more RAM.
      */
-    LittleFileSystem(const char *name = NULL, mbed::BlockDevice *bd = NULL,
-                     lfs_size_t block_size = MBED_LFS_BLOCK_SIZE,
-                     uint32_t   block_cycles = MBED_LFS_BLOCK_CYCLES,
-                     lfs_size_t cache_size = MBED_LFS_CACHE_SIZE,
-                     lfs_size_t lookahead = MBED_LFS_LOOKAHEAD_SIZE);
+    LittleFileSystem2(const char *name = NULL, mbed::BlockDevice *bd = NULL,
+                     lfs2_size_t block_size = MBED_LFS2_BLOCK_SIZE,
+                     uint32_t   block_cycles = MBED_LFS2_BLOCK_CYCLES,
+                     lfs2_size_t cache_size = MBED_LFS2_CACHE_SIZE,
+                     lfs2_size_t lookahead = MBED_LFS2_LOOKAHEAD_SIZE);
 
-    virtual ~LittleFileSystem();
+    virtual ~LittleFileSystem2();
 
-    /** Format a block device with the LittleFileSystem.
+    /** Format a block device with the LittleFileSystem2.
      *
      *  The block device to format should be mounted when this function is called.
      *
@@ -90,10 +90,10 @@ public:
      *      more RAM.
      */
     static int format(mbed::BlockDevice *bd,
-                      lfs_size_t block_size = MBED_LFS_BLOCK_SIZE,
-                      uint32_t   block_cycles = MBED_LFS_BLOCK_CYCLES,
-                      lfs_size_t cache_size = MBED_LFS_CACHE_SIZE,
-                      lfs_size_t lookahead_size = MBED_LFS_LOOKAHEAD_SIZE);
+                      lfs2_size_t block_size = MBED_LFS2_BLOCK_SIZE,
+                      uint32_t   block_cycles = MBED_LFS2_BLOCK_CYCLES,
+                      lfs2_size_t cache_size = MBED_LFS2_CACHE_SIZE,
+                      lfs2_size_t lookahead_size = MBED_LFS2_LOOKAHEAD_SIZE);
 
     /** Mount a file system to a block device.
      *
@@ -288,8 +288,8 @@ protected:
 #endif //!(DOXYGEN_ONLY)
 
 private:
-    lfs_t _lfs; // The actual file system
-    struct lfs_config _config;
+    lfs2_t _lfs; // The actual file system
+    struct lfs2_config _config;
     mbed::BlockDevice *_bd; // The block device
 
     // thread-safe locking
@@ -300,7 +300,7 @@ private:
 
 // Added "using" for backwards compatibility
 #ifndef MBED_NO_GLOBAL_USING_DIRECTIVE
-using mbed::LittleFileSystem;
+using mbed::LittleFileSystem2;
 #endif
 
 #endif
