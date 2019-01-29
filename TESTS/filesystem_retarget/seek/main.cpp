@@ -94,7 +94,7 @@ void test_seek_tests()
         res = mkdir("/fs/" "hello", 0777);
         TEST_ASSERT_EQUAL(0, res);
         for (int i = 0; i < 132; i++) {
-            sprintf((char *)buffer, "/fs/" "hello/kitty%d", i);
+            sprintf((char *)buffer, "/fs/" "hello/kitty%03d", i);
             res = !((fd[0] = fopen((char *)buffer,
                                    "ab")) != NULL);
             TEST_ASSERT_EQUAL(0, res);
@@ -137,7 +137,7 @@ void test_simple_dir_seek()
         off_t pos;
         int i;
         for (i = 0; i < 4; i++) {
-            sprintf((char *)buffer, "kitty%d", i);
+            sprintf((char *)buffer, "kitty%03d", i);
             res = ((ed = readdir(dd[0])) != NULL);
             TEST_ASSERT_EQUAL(1, res);
             res = strcmp(ed->d_name, (char *)buffer);
@@ -148,14 +148,14 @@ void test_simple_dir_seek()
         TEST_ASSERT_EQUAL(1, res);
 
         seekdir(dd[0], pos);
-        sprintf((char *)buffer, "kitty%d", i);
+        sprintf((char *)buffer, "kitty%03d", i);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, (char *)buffer);
         TEST_ASSERT_EQUAL(0, res);
 
         rewinddir(dd[0]);
-        sprintf((char *)buffer, "kitty%d", 0);
+        sprintf((char *)buffer, "kitty%03d", 0);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, ".");
@@ -170,7 +170,7 @@ void test_simple_dir_seek()
         TEST_ASSERT_EQUAL(0, res);
 
         seekdir(dd[0], pos);
-        sprintf((char *)buffer, "kitty%d", i);
+        sprintf((char *)buffer, "kitty%03d", i);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, (char *)buffer);
@@ -207,7 +207,7 @@ void test_large_dir_seek()
         off_t pos;
         int i;
         for (i = 0; i < 128; i++) {
-            sprintf((char *)buffer, "kitty%d", i);
+            sprintf((char *)buffer, "kitty%03d", i);
             res = ((ed = readdir(dd[0])) != NULL);
             TEST_ASSERT_EQUAL(1, res);
             res = strcmp(ed->d_name, (char *)buffer);
@@ -218,14 +218,14 @@ void test_large_dir_seek()
         TEST_ASSERT_EQUAL(1, res);
 
         seekdir(dd[0], pos);
-        sprintf((char *)buffer, "kitty%d", i);
+        sprintf((char *)buffer, "kitty%03d", i);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, (char *)buffer);
         TEST_ASSERT_EQUAL(0, res);
 
         rewinddir(dd[0]);
-        sprintf((char *)buffer, "kitty%d", 0);
+        sprintf((char *)buffer, "kitty%03d", 0);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, ".");
@@ -240,7 +240,7 @@ void test_large_dir_seek()
         TEST_ASSERT_EQUAL(0, res);
 
         seekdir(dd[0], pos);
-        sprintf((char *)buffer, "kitty%d", i);
+        sprintf((char *)buffer, "kitty%03d", i);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, (char *)buffer);
@@ -263,7 +263,7 @@ void test_simple_file_seek()
     {
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = !((fd[0] = fopen("/fs/" "hello/kitty42", "rb")) != NULL);
+        res = !((fd[0] = fopen("/fs/" "hello/kitty042", "rb")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
 
         off_t pos;
@@ -328,7 +328,7 @@ void test_large_file_seek()
     {
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = !((fd[0] = fopen("/fs/" "hello/kitty42", "rb")) != NULL);
+        res = !((fd[0] = fopen("/fs/" "hello/kitty042", "rb")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
 
         off_t pos;
@@ -393,7 +393,7 @@ void test_simple_file_seek_and_write()
     {
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = !((fd[0] = fopen("/fs/" "hello/kitty42", "r+b")) != NULL);
+        res = !((fd[0] = fopen("/fs/" "hello/kitty042", "r+b")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
 
         off_t pos;
@@ -458,7 +458,7 @@ void test_large_file_seek_and_write()
     {
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = !((fd[0] = fopen("/fs/" "hello/kitty42", "r+b")) != NULL);
+        res = !((fd[0] = fopen("/fs/" "hello/kitty042", "r+b")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
 
         off_t pos;
@@ -525,7 +525,7 @@ void test_boundary_seek_and_write()
     {
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = !((fd[0] = fopen("/fs/" "hello/kitty42", "r+b")) != NULL);
+        res = !((fd[0] = fopen("/fs/" "hello/kitty042", "r+b")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
 
         size = strlen("hedgehoghog");
@@ -571,7 +571,7 @@ void test_out_of_bounds_seek()
     {
         res = fs.mount(&bd);
         TEST_ASSERT_EQUAL(0, res);
-        res = !((fd[0] = fopen("/fs/" "hello/kitty42", "r+b")) != NULL);
+        res = !((fd[0] = fopen("/fs/" "hello/kitty042", "r+b")) != NULL);
         TEST_ASSERT_EQUAL(0, res);
 
         size = strlen("kittycatcat");

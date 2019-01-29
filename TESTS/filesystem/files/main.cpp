@@ -391,7 +391,7 @@ void test_dir_check()
 
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "smallavacado");
+        res = strcmp(ent.d_name, "largeavacado");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_REG, res);
@@ -405,7 +405,7 @@ void test_dir_check()
 
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "largeavacado");
+        res = strcmp(ent.d_name, "smallavacado");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_REG, res);

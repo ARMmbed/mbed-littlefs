@@ -22,11 +22,12 @@
 
 namespace mbed {
 
-extern "C" void lfs_crc(uint32_t *crc, const void *buffer, size_t size)
+extern "C" uint32_t lfs_crc(uint32_t crc, const void *buffer, size_t size)
 {
-    uint32_t initial_xor = *crc;
+    uint32_t initial_xor = crc;
     MbedCRC<POLY_32BIT_REV_ANSI, 32> ct(initial_xor, 0x0, true, false);
-    ct.compute((void *)buffer, size, (uint32_t *) crc);
+    ct.compute((void *)buffer, size, &crc);
+    return crc;
 }
 
 ////// Conversion functions //////
@@ -142,14 +143,15 @@ static int lfs_bd_sync(const struct lfs_config *c)
 
 // Filesystem implementation (See LittleFileSystem.h)
 LittleFileSystem::LittleFileSystem(const char *name, BlockDevice *bd,
-                                   lfs_size_t read_size, lfs_size_t prog_size,
-                                   lfs_size_t block_size, lfs_size_t lookahead)
+                                   lfs_size_t block_size, uint32_t block_cycles,
+                                   lfs_size_t cache_size, lfs_size_t lookahead_size)
     : FileSystem(name)
-    , _read_size(read_size)
-    , _prog_size(prog_size)
-    , _block_size(block_size)
-    , _lookahead(lookahead)
 {
+    memset(&_config, 0, sizeof(_config));
+    _config.block_size = block_size;
+    _config.block_cycles = block_cycles;
+    _config.cache_size = cache_size;
+    _config.lookahead_size = lookahead_size;
     if (bd) {
         mount(bd);
     }
@@ -174,29 +176,18 @@ int LittleFileSystem::mount(BlockDevice *bd)
         return err;
     }
 
-    memset(&_config, 0, sizeof(_config));
-    _config.context = bd;
-    _config.read  = lfs_bd_read;
-    _config.prog  = lfs_bd_prog;
-    _config.erase = lfs_bd_erase;
-    _config.sync  = lfs_bd_sync;
-    _config.read_size   = bd->get_read_size();
-    if (_config.read_size < _read_size) {
-        _config.read_size = _read_size;
-    }
-    _config.prog_size   = bd->get_program_size();
-    if (_config.prog_size < _prog_size) {
-        _config.prog_size = _prog_size;
-    }
-    _config.block_size  = bd->get_erase_size();
-    if (_config.block_size < _block_size) {
-        _config.block_size = _block_size;
-    }
-    _config.block_count = bd->size() / _config.block_size;
-    _config.lookahead = 32 * ((_config.block_count + 31) / 32);
-    if (_config.lookahead > _lookahead) {
-        _config.lookahead = _lookahead;
-    }
+    _config.context         = bd;
+    _config.read            = lfs_bd_read;
+    _config.prog            = lfs_bd_prog;
+    _config.erase           = lfs_bd_erase;
+    _config.sync            = lfs_bd_sync;
+    _config.read_size       = bd->get_read_size();
+    _config.prog_size       = bd->get_program_size();
+    _config.block_size      = lfs_max(_config.block_size, (lfs_size_t)bd->get_erase_size());
+    _config.block_count     = bd->size() / _config.block_size;
+    _config.block_cycles    = _config.block_cycles;
+    _config.cache_size      = lfs_max(_config.cache_size, _config.prog_size);
+    _config.lookahead_size  = lfs_min(_config.lookahead_size, 8 * ((_config.block_count + 63) / 64));
 
     err = lfs_mount(&_lfs, &_config);
     if (err) {
@@ -236,11 +227,11 @@ int LittleFileSystem::unmount()
 }
 
 int LittleFileSystem::format(BlockDevice *bd,
-                             lfs_size_t read_size, lfs_size_t prog_size,
-                             lfs_size_t block_size, lfs_size_t lookahead)
+                             lfs_size_t block_size, uint32_t block_cycles,
+                             lfs_size_t cache_size, lfs_size_t lookahead_size)
 {
     LFS_INFO("format(%p, %ld, %ld, %ld, %ld)",
-             bd, read_size, prog_size, block_size, lookahead);
+             bd, block_size, block_cycles, cache_size, lookahead_size);
     int err = bd->init();
     if (err) {
         LFS_INFO("format -> %d", err);
@@ -251,28 +242,18 @@ int LittleFileSystem::format(BlockDevice *bd,
     struct lfs_config _config;
 
     memset(&_config, 0, sizeof(_config));
-    _config.context = bd;
-    _config.read  = lfs_bd_read;
-    _config.prog  = lfs_bd_prog;
-    _config.erase = lfs_bd_erase;
-    _config.sync  = lfs_bd_sync;
-    _config.read_size   = bd->get_read_size();
-    if (_config.read_size < read_size) {
-        _config.read_size = read_size;
-    }
-    _config.prog_size   = bd->get_program_size();
-    if (_config.prog_size < prog_size) {
-        _config.prog_size = prog_size;
-    }
-    _config.block_size  = bd->get_erase_size();
-    if (_config.block_size < block_size) {
-        _config.block_size = block_size;
-    }
-    _config.block_count = bd->size() / _config.block_size;
-    _config.lookahead = 32 * ((_config.block_count + 31) / 32);
-    if (_config.lookahead > lookahead) {
-        _config.lookahead = lookahead;
-    }
+    _config.context         = bd;
+    _config.read            = lfs_bd_read;
+    _config.prog            = lfs_bd_prog;
+    _config.erase           = lfs_bd_erase;
+    _config.sync            = lfs_bd_sync;
+    _config.read_size       = bd->get_read_size();
+    _config.prog_size       = bd->get_program_size();
+    _config.block_size      = lfs_max(block_size, (lfs_size_t)bd->get_erase_size());
+    _config.block_count     = bd->size() / _config.block_size;
+    _config.block_cycles    = block_cycles;
+    _config.cache_size      = lfs_max(cache_size, _config.prog_size);
+    _config.lookahead_size  = lfs_min(lookahead_size, 8 * ((_config.block_count + 63) / 64));
 
     err = lfs_format(&_lfs, &_config);
     if (err) {
@@ -314,7 +295,10 @@ int LittleFileSystem::reformat(BlockDevice *bd)
     }
 
     int err = LittleFileSystem::format(bd,
-                                       _read_size, _prog_size, _block_size, _lookahead);
+            _config.block_size,
+            _config.block_cycles,
+            _config.cache_size,
+            _config.lookahead_size);
     if (err) {
         LFS_INFO("reformat -> %d", err);
         _mutex.unlock();
@@ -376,24 +360,18 @@ int LittleFileSystem::stat(const char *name, struct stat *st)
     return lfs_toerror(err);
 }
 
-static int lfs_statvfs_count(void *p, lfs_block_t b)
-{
-    *(lfs_size_t *)p += 1;
-    return 0;
-}
-
 int LittleFileSystem::statvfs(const char *name, struct statvfs *st)
 {
     memset(st, 0, sizeof(struct statvfs));
 
-    lfs_size_t in_use = 0;
+    lfs_ssize_t in_use = 0;
     _mutex.lock();
     LFS_INFO("statvfs(\"%s\", %p)", name, st);
-    int err = lfs_traverse(&_lfs, lfs_statvfs_count, &in_use);
-    LFS_INFO("statvfs -> %d", lfs_toerror(err));
+    in_use = lfs_fs_size(&_lfs);
+    LFS_INFO("statvfs -> %d", lfs_toerror(in_use));
     _mutex.unlock();
-    if (err) {
-        return err;
+    if (in_use < 0) {
+        return in_use;
     }
 
     st->f_bsize  = _config.block_size;

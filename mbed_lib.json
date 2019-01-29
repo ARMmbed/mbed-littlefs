@@ -1,25 +1,25 @@
 {
   "name": "littlefs",
   "config": {
-    "read_size": {
-        "macro_name": "MBED_LFS_READ_SIZE",
-        "value": 64,
-        "help": "Minimum size of a block read. This determines the size of read buffers. This may be larger than the physical read size to improve performance by caching more of the block device."
-    },
-    "prog_size": {
-        "macro_name": "MBED_LFS_PROG_SIZE",
-        "value": 64,
-        "help": "Minimum size of a block program. This determines the size of program buffers. This may be larger than the physical program size to improve performance by caching more of the block device."
-    },
     "block_size": {
         "macro_name": "MBED_LFS_BLOCK_SIZE",
         "value": 512,
-        "help": "Size of an erasable block. This does not impact ram consumption and may be larger than the physical erase size. However, this should be kept small as each file currently takes up an entire block."
+        "help": "Size of a logical block. This does not impact ram consumption and may be larger than the physical erase block. If the physical erase block is larger, littlefs will use that instead. Larger values will be faster but waste more storage when files are not aligned to a block size."
     },
-    "lookahead": {
-        "macro_name": "MBED_LFS_LOOKAHEAD",
-        "value": 512,
-        "help": "Number of blocks to lookahead during block allocation. A larger lookahead reduces the number of passes required to allocate a block. The lookahead buffer requires only 1 bit per block so it can be quite large with little ram impact. Should be a multiple of 32."
+    "block_cycles": {
+        "macro_name": "MBED_LFS_BLOCK_CYCLES",
+        "value": 1024,
+        "help": "Number of erase cycles before a block is forcefully evicted. Larger values are more efficient but cause less even wear distribution. 0 disables dynamic wear-leveling."
+    },
+    "cache_size": {
+        "macro_name": "MBED_LFS_CACHE_SIZE",
+        "value": "64",
+        "help": "Size of read/program caches. Each file uses 1 cache, and littlefs allocates 2 caches for internal operations. Larger values should be faster but uses more RAM."
+    },
+    "lookahead_size": {
+        "macro_name": "MBED_LFS_LOOKAHEAD_SIZE",
+        "value": 64,
+        "help": "Size of the lookahead buffer. A larger lookahead reduces the allocation scans and results in a faster filesystem but uses more RAM."
     },
     "intrinsics": {
         "macro_name": "MBED_LFS_INTRINSICS",

@@ -391,7 +391,7 @@ void test_dir_check()
 
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "smallavacado");
+        res = strcmp(ed->d_name, "largeavacado");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_REG, res);
@@ -405,7 +405,7 @@ void test_dir_check()
 
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "largeavacado");
+        res = strcmp(ed->d_name, "smallavacado");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_REG, res);

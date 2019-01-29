@@ -177,16 +177,16 @@ void test_directory_iteration()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "potato");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ed->d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = ((ed = readdir(dd[0])) != NULL);
-        TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ed->d_name, "burito");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_REG, res);
+        res = ((ed = readdir(dd[0])) != NULL);
+        TEST_ASSERT_EQUAL(1, res);
+        res = strcmp(ed->d_name, "potato");
+        TEST_ASSERT_EQUAL(0, res);
+        res = ed->d_type;
+        TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(0, res);
         res = closedir(dd[0]);
@@ -268,13 +268,13 @@ void test_nested_directories()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
+        res = strcmp(ed->d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
+        res = strcmp(ed->d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
@@ -301,7 +301,7 @@ void test_multi_block_directory()
         res = mkdir("/fs/" "cactus", 0777);
         TEST_ASSERT_EQUAL(0, res);
         for (int i = 0; i < 128; i++) {
-            sprintf((char *)buffer, "/fs/" "cactus/test%d", i);
+            sprintf((char *)buffer, "/fs/" "cactus/test%03d", i);
             res = mkdir((char *)buffer, 0777);
             TEST_ASSERT_EQUAL(0, res);
         }
@@ -327,7 +327,7 @@ void test_multi_block_directory()
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         for (int i = 0; i < 128; i++) {
-            sprintf((char *)buffer, "test%d", i);
+            sprintf((char *)buffer, "test%03d", i);
             res = ((ed = readdir(dd[0])) != NULL);
             TEST_ASSERT_EQUAL(1, res);
             res = strcmp(ed->d_name, (char *)buffer);
@@ -510,13 +510,13 @@ void test_directory_rename()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
+        res = strcmp(ed->d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
+        res = strcmp(ed->d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
@@ -570,13 +570,13 @@ void test_directory_rename()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
+        res = strcmp(ed->d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
+        res = strcmp(ed->d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
@@ -632,13 +632,13 @@ void test_directory_rename()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "sweet");
+        res = strcmp(ed->d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = ((ed = readdir(dd[0])) != NULL);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ed->d_name, "fried");
+        res = strcmp(ed->d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ed->d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);

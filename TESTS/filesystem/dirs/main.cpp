@@ -176,16 +176,16 @@ void test_directory_iteration()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "potato");
-        TEST_ASSERT_EQUAL(0, res);
-        res = ent.d_type;
-        TEST_ASSERT_EQUAL(DT_DIR, res);
-        res = dir[0].read(&ent);
-        TEST_ASSERT_EQUAL(1, res);
         res = strcmp(ent.d_name, "burito");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_REG, res);
+        res = dir[0].read(&ent);
+        TEST_ASSERT_EQUAL(1, res);
+        res = strcmp(ent.d_name, "potato");
+        TEST_ASSERT_EQUAL(0, res);
+        res = ent.d_type;
+        TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(0, res);
         res = dir[0].close();
@@ -267,13 +267,13 @@ void test_nested_directories()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "sweet");
+        res = strcmp(ent.d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "fried");
+        res = strcmp(ent.d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
@@ -300,7 +300,7 @@ void test_multi_block_directory()
         res = fs.mkdir("cactus", 0777);
         TEST_ASSERT_EQUAL(0, res);
         for (int i = 0; i < 128; i++) {
-            sprintf((char *)buffer, "cactus/test%d", i);
+            sprintf((char *)buffer, "cactus/test%03d", i);
             res = fs.mkdir((char *)buffer, 0777);
             TEST_ASSERT_EQUAL(0, res);
         }
@@ -326,7 +326,7 @@ void test_multi_block_directory()
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         for (int i = 0; i < 128; i++) {
-            sprintf((char *)buffer, "test%d", i);
+            sprintf((char *)buffer, "test%03d", i);
             res = dir[0].read(&ent);
             TEST_ASSERT_EQUAL(1, res);
             res = strcmp(ent.d_name, (char *)buffer);
@@ -509,13 +509,13 @@ void test_directory_rename()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "sweet");
+        res = strcmp(ent.d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "fried");
+        res = strcmp(ent.d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
@@ -569,13 +569,13 @@ void test_directory_rename()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "sweet");
+        res = strcmp(ent.d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "fried");
+        res = strcmp(ent.d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
@@ -631,13 +631,13 @@ void test_directory_rename()
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "sweet");
+        res = strcmp(ent.d_name, "fried");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);
         res = dir[0].read(&ent);
         TEST_ASSERT_EQUAL(1, res);
-        res = strcmp(ent.d_name, "fried");
+        res = strcmp(ent.d_name, "sweet");
         TEST_ASSERT_EQUAL(0, res);
         res = ent.d_type;
         TEST_ASSERT_EQUAL(DT_DIR, res);

@@ -38,29 +38,30 @@ public:
      *
      *  @param name     Name of the file system in the tree.
      *  @param bd       Block device to mount. Mounted immediately if not NULL.
-     *  @param read_size
-     *      Minimum size of a block read. This determines the size of read buffers.
-     *      This may be larger than the physical read size to improve performance
-     *      by caching more of the block device.
-     *  @param prog_size
-     *      Minimum size of a block program. This determines the size of program
-     *      buffers. This may be larger than the physical program size to improve
-     *      performance by caching more of the block device.
      *  @param block_size
-     *      Size of an erasable block. This does not impact ram consumption and
-     *      may be larger than the physical erase size. However, this should be
-     *      kept small as each file currently takes up an entire block.
-     *  @param lookahead
-     *      Number of blocks to lookahead during block allocation. A larger
-     *      lookahead reduces the number of passes required to allocate a block.
-     *      The lookahead buffer requires only 1 bit per block so it can be quite
-     *      large with little ram impact. Should be a multiple of 32.
+     *      Size of a logical block. This does not impact ram consumption and
+     *      may be larger than the physical erase block. If the physical erase
+     *      block is larger, littlefs will use that instead. Larger values will
+     *      be faster but waste more storage when files are not aligned to a
+     *      block size.
+     *  @param block_cycles
+     *      Number of erase cycles before a block is forcefully evicted. Larger
+     *      values are more efficient but cause less even wear distribution. 0
+     *      disables dynamic wear-leveling.
+     *  @param cache_size
+     *      Size of read/program caches. Each file uses 1 cache, and littlefs
+     *      allocates 2 caches for internal operations. Larger values should be
+     *      faster but uses more RAM.
+     *  @param lookahead_size
+     *      Size of the lookahead buffer. A larger lookahead reduces the
+     *      allocation scans and results in a faster filesystem but uses
+     *      more RAM.
      */
     LittleFileSystem(const char *name = NULL, mbed::BlockDevice *bd = NULL,
-                     lfs_size_t read_size = MBED_LFS_READ_SIZE,
-                     lfs_size_t prog_size = MBED_LFS_PROG_SIZE,
                      lfs_size_t block_size = MBED_LFS_BLOCK_SIZE,
-                     lfs_size_t lookahead = MBED_LFS_LOOKAHEAD);
+                     uint32_t   block_cycles = MBED_LFS_BLOCK_CYCLES,
+                     lfs_size_t cache_size = MBED_LFS_CACHE_SIZE,
+                     lfs_size_t lookahead = MBED_LFS_LOOKAHEAD_SIZE);
 
     virtual ~LittleFileSystem();
 
@@ -69,29 +70,30 @@ public:
      *  The block device to format should be mounted when this function is called.
      *
      *  @param bd       This is the block device that will be formatted.
-     *  @param read_size
-     *      Minimum size of a block read. This determines the size of read buffers.
-     *      This may be larger than the physical read size to improve performance
-     *      by caching more of the block device.
-     *  @param prog_size
-     *      Minimum size of a block program. This determines the size of program
-     *      buffers. This may be larger than the physical program size to improve
-     *      performance by caching more of the block device.
      *  @param block_size
-     *      Size of an erasable block. This does not impact ram consumption and
-     *      may be larger than the physical erase size. However, this should be
-     *      kept small as each file currently takes up an entire block.
-     *  @param lookahead
-     *      Number of blocks to lookahead during block allocation. A larger
-     *      lookahead reduces the number of passes required to allocate a block.
-     *      The lookahead buffer requires only 1 bit per block so it can be quite
-     *      large with little ram impact. Should be a multiple of 32.
+     *      Size of a logical block. This does not impact ram consumption and
+     *      may be larger than the physical erase block. If the physical erase
+     *      block is larger, littlefs will use that instead. Larger values will
+     *      be faster but waste more storage when files are not aligned to a
+     *      block size.
+     *  @param block_cycles
+     *      Number of erase cycles before a block is forcefully evicted. Larger
+     *      values are more efficient but cause less even wear distribution. 0
+     *      disables dynamic wear-leveling.
+     *  @param cache_size
+     *      Size of read/program caches. Each file uses 1 cache, and littlefs
+     *      allocates 2 caches for internal operations. Larger values should be
+     *      faster but uses more RAM.
+     *  @param lookahead_size
+     *      Size of the lookahead buffer. A larger lookahead reduces the
+     *      allocation scans and results in a faster filesystem but uses
+     *      more RAM.
      */
     static int format(mbed::BlockDevice *bd,
-                      lfs_size_t read_size = MBED_LFS_READ_SIZE,
-                      lfs_size_t prog_size = MBED_LFS_PROG_SIZE,
                       lfs_size_t block_size = MBED_LFS_BLOCK_SIZE,
-                      lfs_size_t lookahead = MBED_LFS_LOOKAHEAD);
+                      uint32_t   block_cycles = MBED_LFS_BLOCK_CYCLES,
+                      lfs_size_t cache_size = MBED_LFS_CACHE_SIZE,
+                      lfs_size_t lookahead_size = MBED_LFS_LOOKAHEAD_SIZE);
 
     /** Mount a file system to a block device.
      *
@@ -289,12 +291,6 @@ private:
     lfs_t _lfs; // The actual file system
     struct lfs_config _config;
     mbed::BlockDevice *_bd; // The block device
-
-    // default parameters
-    const lfs_size_t _read_size;
-    const lfs_size_t _prog_size;
-    const lfs_size_t _block_size;
-    const lfs_size_t _lookahead;
 
     // thread-safe locking
     PlatformMutex _mutex;
