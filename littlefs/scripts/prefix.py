@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # This script replaces prefixes of files, and symbols in that file.
 # Useful for creating different versions of the codebase that don't
 # conflict at compile time.
 #
 # example:
-# $ ./scripts/prefix.py lfs2
+# $ ./scripts/prefix.py lfs222222
 
 import os
 import os.path
@@ -21,7 +21,9 @@ DEFAULT_PREFIX = "lfs2"
 def subn(from_prefix, to_prefix, name):
     name, count1 = re.subn('\\b'+from_prefix, to_prefix, name)
     name, count2 = re.subn('\\b'+from_prefix.upper(), to_prefix.upper(), name)
-    return name, count1+count2
+    name, count3 = re.subn('\\B-D'+from_prefix.upper(),
+            '-D'+to_prefix.upper(), name)
+    return name, count1+count2+count3
 
 def main(from_prefix, to_prefix=None, files=None):
     if not to_prefix:
