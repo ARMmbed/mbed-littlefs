@@ -53,6 +53,7 @@ const struct lfs2_config cfg = {
     .block_count = 128,
     .cache_size = 16,
     .lookahead_size = 16,
+    .block_cycles = 500,
 };
 
 // entry point
@@ -109,7 +110,7 @@ directory functions, with the deviation that the allocation of filesystem
 structures must be provided by the user.
 
 All POSIX operations, such as remove and rename, are atomic, even in event
-of power-loss. Additionally, no file updates are not actually committed to
+of power-loss. Additionally, file updates are not actually committed to
 the filesystem until sync or close is called on the file.
 
 ## Other notes

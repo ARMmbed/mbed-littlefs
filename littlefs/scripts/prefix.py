@@ -5,7 +5,7 @@
 # conflict at compile time.
 #
 # example:
-# $ ./scripts/prefix.py lfs222222
+# $ ./scripts/prefix.py lfs2
 
 import os
 import os.path
