@@ -14,12 +14,22 @@
         "cache_size": {
             "macro_name": "LFS2_CACHE_SIZE",
             "value": 64,
-            "help": "Size of read/program caches. Each file uses 1 cache, and littlefs allocates 2 caches for internal operations. Larger values should be faster but uses more RAM."
+            "help": "Size of cache, number = size in bytes"
         },
         "lookahead_size": {
             "macro_name": "LFS2_LOOKAHEAD_SIZE",
             "value": 64,
             "help": "Size of the lookahead buffer. A larger lookahead reduces the allocation scans and results in a faster filesystem but uses more RAM."
+        },
+        "read_size": {
+            "macro_name": "LFS2_READ_SIZE",
+            "value": null,
+            "help": "Size of read caches, number = size in bytes, null = use underlying library default"
+        },
+        "prog_size": {
+            "macro_name": "LFS2_PROG_SIZE",
+            "value": null,
+            "help": "Size of prog cache, number = size in bytes, null = use underlying library default"
         },
         "yes_trace": {
             "macro_name": "LFS2_YES_TRACE",
