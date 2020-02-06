@@ -176,8 +176,7 @@ static inline uint32_t lfs2_tole32(uint32_t a) {
 
 // Reverse the bits in a
 static inline uint32_t lfs2_rbit(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && \
-    defined(__MBED__)
+#if !defined(LFS2_NO_INTRINSICS) && defined(__MBED__)
     return __RBIT(a);
 #else
     a = ((a & 0xaaaaaaaa) >> 1) | ((a & 0x55555555) << 1);

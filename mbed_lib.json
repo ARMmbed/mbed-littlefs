@@ -21,10 +21,10 @@
         "value": 64,
         "help": "Size of the lookahead buffer. A larger lookahead reduces the allocation scans and results in a faster filesystem but uses more RAM."
     },
-    "intrinsics": {
-        "macro_name": "MBED_LFS2_INTRINSICS",
-        "value": true,
-        "help": "Enable intrinsics for bit operations such as ctz, popc, and le32 conversion. Can be disabled to help debug toolchain issues"
+    "no_intrinsics": {
+        "macro_name": "MBED_LFS2_NO_INTRINSICS",
+        "value": false,
+        "help": "Disable intrinsics for bit operations such as ctz, popc, and le32 conversion."
     },
     "enable_info": {
         "macro_name": "MBED_LFS2_ENABLE_INFO",
