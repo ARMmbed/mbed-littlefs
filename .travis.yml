@@ -18,9 +18,10 @@ script:
 
       # Run littlefs functional tests with different configurations
       # Note: r/w size of 64 is default in mbed
-    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=64 -DLFS2_PROG_SIZE=64"
-    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=1  -DLFS2_PROG_SIZE=1"
-    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=512 -DLFS2_PROG_SIZE=512"
+    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=64  -DLFS2_CACHE_SIZE=64"
+    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=1   -DLFS2_CACHE_SIZE=1"
+    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=512 -DLFS2_CACHE_SIZE=512 -DLFS2_BLOCK_CYCLES=16"
+    - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_READ_SIZE=8   -DLFS2_CACHE_SIZE=16  -DLFS2_BLOCK_CYCLES=2"
     - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_BLOCK_COUNT=1023"
     - make -Clittlefs test QUIET=1 CFLAGS+="-DLFS2_LOOKAHEAD=2048"
 
