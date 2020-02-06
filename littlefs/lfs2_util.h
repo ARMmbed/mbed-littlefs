@@ -51,6 +51,7 @@ extern "C"
 #ifdef __MBED__
 #include "mbed_debug.h"
 #include "mbed_assert.h"
+#include "cmsis_compiler.h"
 #else
 #define MBED_LFS2_ENABLE_INFO    false
 #define MBED_LFS2_ENABLE_DEBUG   true
@@ -190,6 +191,21 @@ static inline uint32_t lfs2_fromle32(uint32_t a) {
 
 static inline uint32_t lfs2_tole32(uint32_t a) {
     return lfs2_fromle32(a);
+}
+
+// Reverse the bits in a
+static inline uint32_t lfs2_rbit(uint32_t a) {
+#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && \
+    defined(__MBED__)
+    return __RBIT(a);
+#else
+    a = ((a & 0xaaaaaaaa) >> 1) | ((a & 0x55555555) << 1);
+    a = ((a & 0xcccccccc) >> 2) | ((a & 0x33333333) << 2);
+    a = ((a & 0xf0f0f0f0) >> 4) | ((a & 0x0f0f0f0f) << 4);
+    a = ((a & 0xff00ff00) >> 8) | ((a & 0x00ff00ff) << 8);
+    a = (a >> 16) | (a << 16);
+    return a;
+#endif
 }
 
 // Convert between 32-bit big-endian and native order
