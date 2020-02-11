@@ -255,7 +255,7 @@ TEST
 ## by generalized tests. For now we'll just skip if the geometry
 ## is customized.
 
-if [[ ! $MAKEFLAGS =~ "LFS2_BLOCK_CYCLES" ]]
+if [[ ! $MAKEFLAGS =~ "LFS2_BLOCK_CYCLES" && ! $MAKEFLAGS =~ "LFS2_READ_SIZE" ]]
 then
 
 echo "--- Chained dir exhaustion test ---"
