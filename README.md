@@ -12,16 +12,16 @@ A little fail-safe filesystem designed for embedded systems.
 ```
 
 **Bounded RAM/ROM** - The littlefs is designed to work with a limited amount
-of memory. Recursion is avoided and dynamic memory is limited to configurable
+of memory. Recursion is avoided, and dynamic memory is limited to configurable
 buffers that can be provided statically.
 
 **Power-loss resilient** - The littlefs is designed for systems that may have
-random power failures. The littlefs has strong copy-on-write guarantees and
+random power failures. The littlefs has strong copy-on-write guarantees, and
 storage on disk is always kept in a valid state.
 
-**Wear leveling** - Since the most common form of embedded storage is erodible
+**Wear leveling** - Because the most common form of embedded storage is erodible
 flash memories, littlefs provides a form of dynamic wear leveling for systems
-that can not fit a full flash translation layer.
+that cannot fit a full flash translation layer.
 
 ## Example
 
@@ -30,14 +30,14 @@ main runs. The program can be interrupted at any time without losing track
 of how many times it has been booted and without corrupting the filesystem:
 
 ``` c
-#include "lfs.h"
+#include "lfs2.h"
 
 // variables used by the filesystem
-lfs_t lfs;
-lfs_file_t file;
+lfs2_t lfs2;
+lfs2_file_t file;
 
 // configuration of the filesystem is provided by this struct
-const struct lfs_config cfg = {
+const struct lfs2_config cfg = {
     // block device operations
     .read  = user_provided_block_device_read,
     .prog  = user_provided_block_device_prog,
@@ -56,30 +56,30 @@ const struct lfs_config cfg = {
 // entry point
 int main(void) {
     // mount the filesystem
-    int err = lfs_mount(&lfs, &cfg);
+    int err = lfs2_mount(&lfs2, &cfg);
 
     // reformat if we can't mount the filesystem
     // this should only happen on the first boot
     if (err) {
-        lfs_format(&lfs, &cfg);
-        lfs_mount(&lfs, &cfg);
+        lfs2_format(&lfs2, &cfg);
+        lfs2_mount(&lfs2, &cfg);
     }
 
     // read current count
     uint32_t boot_count = 0;
-    lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
-    lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+    lfs2_file_open(&lfs2, &file, "boot_count", LFS2_O_RDWR | LFS2_O_CREAT);
+    lfs2_file_read(&lfs2, &file, &boot_count, sizeof(boot_count));
 
     // update boot count
     boot_count += 1;
-    lfs_file_rewind(&lfs, &file);
-    lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
+    lfs2_file_rewind(&lfs2, &file);
+    lfs2_file_write(&lfs2, &file, &boot_count, sizeof(boot_count));
 
     // remember the storage is not updated until the file is closed successfully
-    lfs_file_close(&lfs, &file);
+    lfs2_file_close(&lfs2, &file);
 
     // release any resources we were using
-    lfs_unmount(&lfs);
+    lfs2_unmount(&lfs2);
 
     // print the boot count
     printf("boot_count: %d\n", boot_count);
@@ -89,17 +89,17 @@ int main(void) {
 ## Usage
 
 Detailed documentation (or at least as much detail as is currently available)
-can be found in the comments in [lfs.h](lfs.h).
+can be found in the comments in [lfs2.h](lfs2.h).
 
 As you may have noticed, littlefs takes in a configuration structure that
 defines how the filesystem operates. The configuration struct provides the
 filesystem with the block device operations and dimensions, tweakable
-parameters that tradeoff memory usage for performance, and optional
+parameters that trade memory usage for performance and optional
 static buffers if the user wants to avoid dynamic memory.
 
-The state of the littlefs is stored in the `lfs_t` type which is left up
+The state of the littlefs is stored in the `lfs2_t` type, which is left up
 to the user to allocate, allowing multiple filesystems to be in use
-simultaneously. With the `lfs_t` and configuration struct, a user can
+simultaneously. With the `lfs2_t` and configuration struct, a user can
 format a block device or mount the filesystem.
 
 Once mounted, the littlefs provides a full set of POSIX-like file and
@@ -107,17 +107,17 @@ directory functions, with the deviation that the allocation of filesystem
 structures must be provided by the user.
 
 All POSIX operations, such as remove and rename, are atomic, even in event
-of power-loss. Additionally, no file updates are actually committed to the
+of power loss. Additionally, no file updates are actually committed to the
 filesystem until sync or close is called on the file.
 
 ## Other notes
 
 All littlefs have the potential to return a negative error code. The errors
-can be either one of those found in the `enum lfs_error` in [lfs.h](lfs.h),
+can be either one of those found in the `enum lfs2_error` in [lfs2.h](lfs2.h),
 or an error returned by the user's block device operations.
 
 In the configuration struct, the `prog` and `erase` function provided by the
-user may return a `LFS_ERR_CORRUPT` error if the implementation already can
+user may return a `LFS2_ERR_CORRUPT` error if the implementation already can
 detect corrupt blocks. However, the wear leveling does not depend on the return
 code of these functions, instead all data is read back and checked for
 integrity.
@@ -131,16 +131,16 @@ hits the memory, the `sync` function can simply return 0.
 ## Reference material
 
 [DESIGN.md](DESIGN.md) - DESIGN.md contains a fully detailed dive into how
-littlefs actually works. I would encourage you to read it since the
+littlefs actually works. We would encourage you to read it because the
 solutions and tradeoffs at work here are quite interesting.
 
 [SPEC.md](SPEC.md) - SPEC.md contains the on-disk specification of littlefs
-with all the nitty-gritty details. Can be useful for developing tooling.
+with all the nitty-gritty details. This can be useful for developing tooling.
 
 ## Testing
 
 The littlefs comes with a test suite designed to run on a PC using the
-[emulated block device](emubd/lfs_emubd.h) found in the emubd directory.
+[emulated block device](emubd/lfs2_emubd.h) found in the emubd directory.
 The tests assume a Linux environment and can be started with make:
 
 ``` bash
@@ -165,7 +165,7 @@ License Identifiers that are here available: http://spdx.org/licenses/
 [Mbed OS](https://github.com/ARMmbed/mbed-os/tree/master/features/filesystem/littlefs) -
 The easiest way to get started with littlefs is to jump into [Mbed](https://os.mbed.com/),
 which already has block device drivers for most forms of embedded storage. The
-littlefs is available in Mbed OS as the [LittleFileSystem](https://os.mbed.com/docs/latest/reference/littlefilesystem.html)
+littlefs is available in Mbed OS as the [LittleFileSystem2](https://os.mbed.com/docs/latest/reference/littlefilesystem.html)
 class.
 
 [littlefs-fuse](https://github.com/geky/littlefs-fuse) - A [FUSE](https://github.com/libfuse/libfuse)
@@ -173,7 +173,7 @@ wrapper for littlefs. The project allows you to mount littlefs directly on a
 Linux machine. Can be useful for debugging littlefs if you have an SD card
 handy.
 
-[littlefs-js](https://github.com/geky/littlefs-js) - A javascript wrapper for
+[littlefs-js](https://github.com/geky/littlefs-js) - A JavaScript wrapper for
 littlefs. I'm not sure why you would want this, but it is handy for demos.
 You can see it in action [here](http://littlefs.geky.net/demo.html).
 
