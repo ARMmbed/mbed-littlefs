@@ -166,12 +166,10 @@ LittleFileSystem2::~LittleFileSystem2()
 int LittleFileSystem2::mount(BlockDevice *bd)
 {
     _mutex.lock();
-    LFS2_INFO("mount(%p)", bd);
     _bd = bd;
     int err = _bd->init();
     if (err) {
         _bd = NULL;
-        LFS2_INFO("mount -> %d", err);
         _mutex.unlock();
         return err;
     }
@@ -192,20 +190,17 @@ int LittleFileSystem2::mount(BlockDevice *bd)
     err = lfs2_mount(&_lfs, &_config);
     if (err) {
         _bd = NULL;
-        LFS2_INFO("mount -> %d", lfs2_toerror(err));
         _mutex.unlock();
         return lfs2_toerror(err);
     }
 
     _mutex.unlock();
-    LFS2_INFO("mount -> %d", 0);
     return 0;
 }
 
 int LittleFileSystem2::unmount()
 {
     _mutex.lock();
-    LFS2_INFO("unmount(%s)", "");
     int res = 0;
     if (_bd) {
         int err = lfs2_unmount(&_lfs);
@@ -221,7 +216,6 @@ int LittleFileSystem2::unmount()
         _bd = NULL;
     }
 
-    LFS2_INFO("unmount -> %d", res);
     _mutex.unlock();
     return res;
 }
@@ -230,11 +224,8 @@ int LittleFileSystem2::format(BlockDevice *bd,
                              lfs2_size_t block_size, uint32_t block_cycles,
                              lfs2_size_t cache_size, lfs2_size_t lookahead_size)
 {
-    LFS2_INFO("format(%p, %ld, %ld, %ld, %ld)",
-             bd, block_size, block_cycles, cache_size, lookahead_size);
     int err = bd->init();
     if (err) {
-        LFS2_INFO("format -> %d", err);
         return err;
     }
 
@@ -257,24 +248,20 @@ int LittleFileSystem2::format(BlockDevice *bd,
 
     err = lfs2_format(&_lfs, &_config);
     if (err) {
-        LFS2_INFO("format -> %d", lfs2_toerror(err));
         return lfs2_toerror(err);
     }
 
     err = bd->deinit();
     if (err) {
-        LFS2_INFO("format -> %d", err);
         return err;
     }
 
-    LFS2_INFO("format -> %d", 0);
     return 0;
 }
 
 int LittleFileSystem2::reformat(BlockDevice *bd)
 {
     _mutex.lock();
-    LFS2_INFO("reformat(%p)", bd);
     if (_bd) {
         if (!bd) {
             bd = _bd;
@@ -282,14 +269,12 @@ int LittleFileSystem2::reformat(BlockDevice *bd)
 
         int err = unmount();
         if (err) {
-            LFS2_INFO("reformat -> %d", err);
             _mutex.unlock();
             return err;
         }
     }
 
     if (!bd) {
-        LFS2_INFO("reformat -> %d", -ENODEV);
         _mutex.unlock();
         return -ENODEV;
     }
@@ -300,19 +285,16 @@ int LittleFileSystem2::reformat(BlockDevice *bd)
             _config.cache_size,
             _config.lookahead_size);
     if (err) {
-        LFS2_INFO("reformat -> %d", err);
         _mutex.unlock();
         return err;
     }
 
     err = mount(bd);
     if (err) {
-        LFS2_INFO("reformat -> %d", err);
         _mutex.unlock();
         return err;
     }
 
-    LFS2_INFO("reformat -> %d", 0);
     _mutex.unlock();
     return 0;
 }
@@ -320,9 +302,7 @@ int LittleFileSystem2::reformat(BlockDevice *bd)
 int LittleFileSystem2::remove(const char *filename)
 {
     _mutex.lock();
-    LFS2_INFO("remove(\"%s\")", filename);
     int err = lfs2_remove(&_lfs, filename);
-    LFS2_INFO("remove -> %d", lfs2_toerror(err));
     _mutex.unlock();
     return lfs2_toerror(err);
 }
@@ -330,9 +310,7 @@ int LittleFileSystem2::remove(const char *filename)
 int LittleFileSystem2::rename(const char *oldname, const char *newname)
 {
     _mutex.lock();
-    LFS2_INFO("rename(\"%s\", \"%s\")", oldname, newname);
     int err = lfs2_rename(&_lfs, oldname, newname);
-    LFS2_INFO("rename -> %d", lfs2_toerror(err));
     _mutex.unlock();
     return lfs2_toerror(err);
 }
@@ -340,9 +318,7 @@ int LittleFileSystem2::rename(const char *oldname, const char *newname)
 int LittleFileSystem2::mkdir(const char *name, mode_t mode)
 {
     _mutex.lock();
-    LFS2_INFO("mkdir(\"%s\", 0x%lx)", name, mode);
     int err = lfs2_mkdir(&_lfs, name);
-    LFS2_INFO("mkdir -> %d", lfs2_toerror(err));
     _mutex.unlock();
     return lfs2_toerror(err);
 }
@@ -351,9 +327,7 @@ int LittleFileSystem2::stat(const char *name, struct stat *st)
 {
     struct lfs2_info info;
     _mutex.lock();
-    LFS2_INFO("stat(\"%s\", %p)", name, st);
     int err = lfs2_stat(&_lfs, name, &info);
-    LFS2_INFO("stat -> %d", lfs2_toerror(err));
     _mutex.unlock();
     st->st_size = info.size;
     st->st_mode = lfs2_tomode(info.type);
@@ -366,9 +340,7 @@ int LittleFileSystem2::statvfs(const char *name, struct statvfs *st)
 
     lfs2_ssize_t in_use = 0;
     _mutex.lock();
-    LFS2_INFO("statvfs(\"%s\", %p)", name, st);
     in_use = lfs2_fs_size(&_lfs);
-    LFS2_INFO("statvfs -> %d", lfs2_toerror(in_use));
     _mutex.unlock();
     if (in_use < 0) {
         return in_use;
@@ -388,9 +360,7 @@ int LittleFileSystem2::file_open(fs_file_t *file, const char *path, int flags)
 {
     lfs2_file_t *f = new lfs2_file_t;
     _mutex.lock();
-    LFS2_INFO("file_open(%p, \"%s\", 0x%x)", *file, path, flags);
     int err = lfs2_file_open(&_lfs, f, path, lfs2_fromflags(flags));
-    LFS2_INFO("file_open -> %d", lfs2_toerror(err));
     _mutex.unlock();
     if (!err) {
         *file = f;
@@ -404,9 +374,7 @@ int LittleFileSystem2::file_close(fs_file_t file)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_close(%p)", file);
     int err = lfs2_file_close(&_lfs, f);
-    LFS2_INFO("file_close -> %d", lfs2_toerror(err));
     _mutex.unlock();
     delete f;
     return lfs2_toerror(err);
@@ -416,9 +384,7 @@ ssize_t LittleFileSystem2::file_read(fs_file_t file, void *buffer, size_t len)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_read(%p, %p, %d)", file, buffer, len);
     lfs2_ssize_t res = lfs2_file_read(&_lfs, f, buffer, len);
-    LFS2_INFO("file_read -> %d", lfs2_toerror(res));
     _mutex.unlock();
     return lfs2_toerror(res);
 }
@@ -427,9 +393,7 @@ ssize_t LittleFileSystem2::file_write(fs_file_t file, const void *buffer, size_t
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_write(%p, %p, %d)", file, buffer, len);
     lfs2_ssize_t res = lfs2_file_write(&_lfs, f, buffer, len);
-    LFS2_INFO("file_write -> %d", lfs2_toerror(res));
     _mutex.unlock();
     return lfs2_toerror(res);
 }
@@ -438,9 +402,7 @@ int LittleFileSystem2::file_sync(fs_file_t file)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_sync(%p)", file);
     int err = lfs2_file_sync(&_lfs, f);
-    LFS2_INFO("file_sync -> %d", lfs2_toerror(err));
     _mutex.unlock();
     return lfs2_toerror(err);
 }
@@ -449,9 +411,7 @@ off_t LittleFileSystem2::file_seek(fs_file_t file, off_t offset, int whence)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_seek(%p, %ld, %d)", file, offset, whence);
     off_t res = lfs2_file_seek(&_lfs, f, offset, lfs2_fromwhence(whence));
-    LFS2_INFO("file_seek -> %d", lfs2_toerror(res));
     _mutex.unlock();
     return lfs2_toerror(res);
 }
@@ -460,9 +420,7 @@ off_t LittleFileSystem2::file_tell(fs_file_t file)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_tell(%p)", file);
     off_t res = lfs2_file_tell(&_lfs, f);
-    LFS2_INFO("file_tell -> %d", lfs2_toerror(res));
     _mutex.unlock();
     return lfs2_toerror(res);
 }
@@ -471,9 +429,7 @@ off_t LittleFileSystem2::file_size(fs_file_t file)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_size(%p)", file);
     off_t res = lfs2_file_size(&_lfs, f);
-    LFS2_INFO("file_size -> %d", lfs2_toerror(res));
     _mutex.unlock();
     return lfs2_toerror(res);
 }
@@ -482,9 +438,7 @@ int LittleFileSystem2::file_truncate(fs_file_t file, off_t length)
 {
     lfs2_file_t *f = (lfs2_file_t *)file;
     _mutex.lock();
-    LFS2_INFO("file_truncate(%p)", file);
     int err = lfs2_file_truncate(&_lfs, f, length);
-    LFS2_INFO("file_truncate -> %d", lfs2_toerror(err));
     _mutex.unlock();
     return lfs2_toerror(err);
 }
@@ -495,9 +449,7 @@ int LittleFileSystem2::dir_open(fs_dir_t *dir, const char *path)
 {
     lfs2_dir_t *d = new lfs2_dir_t;
     _mutex.lock();
-    LFS2_INFO("dir_open(%p, \"%s\")", *dir, path);
     int err = lfs2_dir_open(&_lfs, d, path);
-    LFS2_INFO("dir_open -> %d", lfs2_toerror(err));
     _mutex.unlock();
     if (!err) {
         *dir = d;
@@ -511,9 +463,7 @@ int LittleFileSystem2::dir_close(fs_dir_t dir)
 {
     lfs2_dir_t *d = (lfs2_dir_t *)dir;
     _mutex.lock();
-    LFS2_INFO("dir_close(%p)", dir);
     int err = lfs2_dir_close(&_lfs, d);
-    LFS2_INFO("dir_close -> %d", lfs2_toerror(err));
     _mutex.unlock();
     delete d;
     return lfs2_toerror(err);
@@ -524,9 +474,7 @@ ssize_t LittleFileSystem2::dir_read(fs_dir_t dir, struct dirent *ent)
     lfs2_dir_t *d = (lfs2_dir_t *)dir;
     struct lfs2_info info;
     _mutex.lock();
-    LFS2_INFO("dir_read(%p, %p)", dir, ent);
     int res = lfs2_dir_read(&_lfs, d, &info);
-    LFS2_INFO("dir_read -> %d", lfs2_toerror(res));
     _mutex.unlock();
     if (res == 1) {
         ent->d_type = lfs2_totype(info.type);
@@ -539,9 +487,7 @@ void LittleFileSystem2::dir_seek(fs_dir_t dir, off_t offset)
 {
     lfs2_dir_t *d = (lfs2_dir_t *)dir;
     _mutex.lock();
-    LFS2_INFO("dir_seek(%p, %ld)", dir, offset);
     lfs2_dir_seek(&_lfs, d, offset);
-    LFS2_INFO("dir_seek -> %s", "void");
     _mutex.unlock();
 }
 
@@ -549,9 +495,7 @@ off_t LittleFileSystem2::dir_tell(fs_dir_t dir)
 {
     lfs2_dir_t *d = (lfs2_dir_t *)dir;
     _mutex.lock();
-    LFS2_INFO("dir_tell(%p)", dir);
     lfs2_soff_t res = lfs2_dir_tell(&_lfs, d);
-    LFS2_INFO("dir_tell -> %d", lfs2_toerror(res));
     _mutex.unlock();
     return lfs2_toerror(res);
 }
@@ -560,9 +504,7 @@ void LittleFileSystem2::dir_rewind(fs_dir_t dir)
 {
     lfs2_dir_t *d = (lfs2_dir_t *)dir;
     _mutex.lock();
-    LFS2_INFO("dir_rewind(%p)", dir);
     lfs2_dir_rewind(&_lfs, d);
-    LFS2_INFO("dir_rewind -> %s", "void");
     _mutex.unlock();
 }
 
