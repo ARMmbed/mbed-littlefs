@@ -1,6 +1,7 @@
 /*
  * lfs2 utility functions
  *
+ * Copyright (c) 2022, The littlefs authors.
  * Copyright (c) 2017, Arm Limited. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -48,75 +49,54 @@ extern "C"
 // macros must not have side-effects as the macros can be removed for a smaller
 // code footprint
 
-#ifdef __MBED__
-#include "mbed_debug.h"
-#include "mbed_assert.h"
-#include "cmsis_compiler.h"
-#else
-#define MBED_LFS2_ENABLE_INFO    false
-#define MBED_LFS2_ENABLE_DEBUG   true
-#define MBED_LFS2_ENABLE_WARN    true
-#define MBED_LFS2_ENABLE_ERROR   true
-#define MBED_LFS2_ENABLE_ASSERT  true
-#define MBED_LFS2_INTRINSICS     true
-#endif
-
 // Logging functions
-#if defined(LFS2_YES_TRACE) && MBED_LFS2_ENABLE_TRACE
+#ifndef LFS2_TRACE
+#ifdef LFS2_YES_TRACE
 #define LFS2_TRACE_(fmt, ...) \
     printf("%s:%d:trace: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
-#define LFS2_TRACE(...) LFS2_TRACE_(__VA_ARGS__, "")
-#elif defined(LFS2_YES_TRACE) && !defined(MBED_LFS2_ENABLE_TRACE)
-#define LFS2_TRACE_(fmt, ...) \
-    debug("%s:%d:trace: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS2_TRACE(...) LFS2_TRACE_(__VA_ARGS__, "")
 #else
 #define LFS2_TRACE(...)
 #endif
+#endif
 
-#if !defined(LFS2_NO_DEBUG) && MBED_LFS2_ENABLE_DEBUG
+#ifndef LFS2_DEBUG
+#ifndef LFS2_NO_DEBUG
 #define LFS2_DEBUG_(fmt, ...) \
     printf("%s:%d:debug: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
-#define LFS2_DEBUG(...) LFS2_DEBUG_(__VA_ARGS__, "")
-#elif !defined(LFS2_NO_DEBUG) && !defined(MBED_LFS2_ENABLE_DEBUG)
-#define LFS2_DEBUG_(fmt, ...) \
-    debug("%s:%d:debug: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS2_DEBUG(...) LFS2_DEBUG_(__VA_ARGS__, "")
 #else
 #define LFS2_DEBUG(...)
 #endif
+#endif
 
-#if !defined(LFS2_NO_WARN) && MBED_LFS2_ENABLE_WARN
+#ifndef LFS2_WARN
+#ifndef LFS2_NO_WARN
 #define LFS2_WARN_(fmt, ...) \
     printf("%s:%d:warn: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
-#define LFS2_WARN(...) LFS2_WARN_(__VA_ARGS__, "")
-#elif !defined(LFS2_NO_WARN) && !defined(MBED_LFS2_ENABLE_WARN)
-#define LFS2_WARN_(fmt, ...) \
-    debug("%s:%d:warn: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS2_WARN(...) LFS2_WARN_(__VA_ARGS__, "")
 #else
 #define LFS2_WARN(...)
 #endif
+#endif
 
-#if !defined(LFS2_NO_ERROR) && MBED_LFS2_ENABLE_ERROR
+#ifndef LFS2_ERROR
+#ifndef LFS2_NO_ERROR
 #define LFS2_ERROR_(fmt, ...) \
     printf("%s:%d:error: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
-#define LFS2_ERROR(...) LFS2_ERROR_(__VA_ARGS__, "")
-#elif !defined(LFS2_NO_ERROR) && !defined(MBED_LFS2_ENABLE_ERROR)
-#define LFS2_ERROR_(fmt, ...) \
-    debug("%s:%d:error: " fmt "%s\n", __FILE__, __LINE__, __VA_ARGS__)
 #define LFS2_ERROR(...) LFS2_ERROR_(__VA_ARGS__, "")
 #else
 #define LFS2_ERROR(...)
 #endif
+#endif
 
 // Runtime assertions
-#if !defined(LFS2_NO_ASSERT) && MBED_LFS2_ENABLE_ASSERT
+#ifndef LFS2_ASSERT
+#ifndef LFS2_NO_ASSERT
 #define LFS2_ASSERT(test) assert(test)
-#elif !defined(LFS2_NO_ASSERT) && !defined(MBED_LFS2_ENABLE_ASSERT)
-#define LFS2_ASSERT(test) MBED_ASSERT(test)
 #else
 #define LFS2_ASSERT(test)
+#endif
 #endif
 
 
@@ -144,8 +124,7 @@ static inline uint32_t lfs2_alignup(uint32_t a, uint32_t alignment) {
 
 // Find the smallest power of 2 greater than or equal to a
 static inline uint32_t lfs2_npw2(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && \
-    (defined(__GNUC__) || defined(__CC_ARM))
+#if !defined(LFS2_NO_INTRINSICS) && (defined(__GNUC__) || defined(__CC_ARM))
     return 32 - __builtin_clz(a-1);
 #else
     uint32_t r = 0;
@@ -162,8 +141,7 @@ static inline uint32_t lfs2_npw2(uint32_t a) {
 // Count the number of trailing binary zeros in a
 // lfs2_ctz(0) may be undefined
 static inline uint32_t lfs2_ctz(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && \
-    defined(__GNUC__)
+#if !defined(LFS2_NO_INTRINSICS) && defined(__GNUC__)
     return __builtin_ctz(a);
 #else
     return lfs2_npw2((a & -a) + 1) - 1;
@@ -172,8 +150,7 @@ static inline uint32_t lfs2_ctz(uint32_t a) {
 
 // Count the number of binary ones in a
 static inline uint32_t lfs2_popc(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && \
-    (defined(__GNUC__) || defined(__CC_ARM))
+#if !defined(LFS2_NO_INTRINSICS) && (defined(__GNUC__) || defined(__CC_ARM))
     return __builtin_popcount(a);
 #else
     a = a - ((a >> 1) & 0x55555555);
@@ -190,12 +167,12 @@ static inline int lfs2_scmp(uint32_t a, uint32_t b) {
 
 // Convert between 32-bit little-endian and native order
 static inline uint32_t lfs2_fromle32(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && ( \
+#if !defined(LFS2_NO_INTRINSICS) && ( \
     (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_LITTLE_ENDIAN  ) && __BYTE_ORDER   == __ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
     return a;
-#elif !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && ( \
+#elif !defined(LFS2_NO_INTRINSICS) && ( \
     (defined(  BYTE_ORDER  ) && defined(  ORDER_BIG_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_BIG_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_BIG_ENDIAN  ) && __BYTE_ORDER   == __ORDER_BIG_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
@@ -212,29 +189,14 @@ static inline uint32_t lfs2_tole32(uint32_t a) {
     return lfs2_fromle32(a);
 }
 
-// Reverse the bits in a
-static inline uint32_t lfs2_rbit(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && \
-    defined(__MBED__)
-    return __RBIT(a);
-#else
-    a = ((a & 0xaaaaaaaa) >> 1) | ((a & 0x55555555) << 1);
-    a = ((a & 0xcccccccc) >> 2) | ((a & 0x33333333) << 2);
-    a = ((a & 0xf0f0f0f0) >> 4) | ((a & 0x0f0f0f0f) << 4);
-    a = ((a & 0xff00ff00) >> 8) | ((a & 0x00ff00ff) << 8);
-    a = (a >> 16) | (a << 16);
-    return a;
-#endif
-}
-
 // Convert between 32-bit big-endian and native order
 static inline uint32_t lfs2_frombe32(uint32_t a) {
-#if !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && ( \
+#if !defined(LFS2_NO_INTRINSICS) && ( \
     (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_LITTLE_ENDIAN  ) && __BYTE_ORDER   == __ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
     return __builtin_bswap32(a);
-#elif !defined(LFS2_NO_INTRINSICS) && MBED_LFS2_INTRINSICS && ( \
+#elif !defined(LFS2_NO_INTRINSICS) && ( \
     (defined(  BYTE_ORDER  ) && defined(  ORDER_BIG_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_BIG_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_BIG_ENDIAN  ) && __BYTE_ORDER   == __ORDER_BIG_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))

@@ -1,6 +1,7 @@
 /*
  * lfs2 util functions
  *
+ * Copyright (c) 2022, The littlefs authors.
  * Copyright (c) 2017, Arm Limited. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,7 +9,7 @@
 
 // Only compile if user does not provide custom config
 #ifndef LFS2_CONFIG
-#ifndef __MBED__
+
 
 // Software CRC implementation with small lookup table
 uint32_t lfs2_crc(uint32_t crc, const void *buffer, size_t size) {
@@ -29,5 +30,5 @@ uint32_t lfs2_crc(uint32_t crc, const void *buffer, size_t size) {
     return crc;
 }
 
-#endif
+
 #endif
